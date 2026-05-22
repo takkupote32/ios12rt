@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>放射線治療 診療報酬シミュレーター 2026</title>
+    <style>
+        /* iOS 12対応用の安全なレガシーCSS */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #F0F2F6;
+            color: #31333F;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        h2 { color: #111; border-bottom: 2px solid #ff4b4b; padding-bottom: 8px; }
+        .grid { display: block; }
+        @media (min-width: 768px) {
+            .grid { display: flex; }
+            .col { flex: 1; margin: 10px; }
+        }
+        .box {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+        label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 14px; }
+        select, input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px; /* iOSのズーム防止 */
+            margin-bottom: 15px;
+            box-sizing: border-box;
+        }
+        .radio-group { margin-bottom: 15px; }
+        .radio-inline { margin-right: 15px; font-weight: normal; display: inline-block; }
+        .result-val { font-size: 32px; font-weight: bold; color: #ff4b4b; margin: 10px 0; }
+        pre {
+            background: #1E1E24;
+            color: #FFF;
+            padding: 12px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: monospace;
+            font-size: 13px;
+        }
+        .info { background: #e1f5fe; border-left: 4px solid #0288d1; padding: 10px; margin-bottom: 15px; border-radius: 4px; font-size: 13px; }
+        .warning { background: #fff3e0; border-left: 4px solid #f57c00; padding: 10px; margin-bottom: 15px; border-radius: 4px; font-size: 13px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>⚛️ 放射線治療 診療報酬シミュレーター 2026</h2>
+    
+    <div class="grid">
+        <div class="col">
+            <div class="box">
+                <label>主たる照射方法</label>
+                <select id="main_method" onchange="calculate()">
+                    <option value="前立腺VMAT">前立腺VMAT</option>
+                    <option value="全乳房(一連)">全乳房(一連)</option>
+                    <option value="IMRT">IMRT</option>
+                    <option value="1門照射">1門照射</option>
+                    <option value="対向2門">対向2門</option>
+                    <option value="非対向2門・3門照射">非対向2門・3門照射</option>
+                    <option value="4門以上・運動・原体照射">4門以上・運動・原体照射</option>
+                    <option value="全身照射TBI">全身照射TBI</option>
+                    <option value="緩和寡分割">緩和寡分割</option>
+                    <option value="ケロイド">ケロイド</option>
+                    <option value="肺定位SBRT">肺定位SBRT</option>
+                    <option value="脳定位SRT">脳定位SRT</option>
+                </select>
+
+                <label>患者負担割合</label>
+                <div class="radio-group" onchange="calculate()">
+                    <label class="radio-inline"><input type="radio" name="ratio" value="1"> 1割</label>
+                    <label class="radio-inline"><input type="radio" name="ratio" value="2"> 2割</label>
+                    <label class="radio-inline"><input type="radio" name="ratio" value="3" checked> 3割</label>
+                </div>
+
+                <label>患者区分</label>
+                <div class="radio-group" onchange="calculate()">
+                    <label class="radio-inline"><input type="radio" name="pt_type" id="pt_out" value="外来" checked> 外来</label>
+                    <label class="radio-inline"><input type="radio" name="pt_type" id="pt_in" value="入院"> 入院</label>
+                </div>
+
+                <div id="igrt_div">
+                    <label>IGRT区分</label>
+                    <select id="igrt_sel" onchange="calculate()">
+                        <option value="なし">なし</option>
+                        <option value="イ.体表">イ.体表 (150点)</option>
+                        <option value="ロ.骨構造">ロ.骨構造 (300点)</option>
+                        <option value="ハ.腫瘍">ハ.腫瘍 (450点)</option>
+                    </select>
+                </div>
+
+                <div id="fix_div">
+                    <label>体外照射用固定器具</label>
+                    <select id="fix_sel" onchange="calculate()">
+                        <option value="なし">なし</option>
+                        <option value="作成あり">作成あり (1,000点)</option>
+                    </select>
+                </div>
+
+                <div id="breath_div">
+                    <label>呼吸性移動対策</label>
+                    <select id="breath_sel" onchange="calculate()">
+                        <option value="なし">なし</option>
+                        <option value="あり">あり</option>
+                    </select>
+                </div>
+
+                <div id="breast_igrt_div" style="display:none;">
+                    <label>IGRT(一連2400点)</label>
+                    <select id="breast_igrt_sel" onchange="calculate()">
+                        <option value="なし">なし</option>
+                        <option value="あり">あり (2,400点)</option>
+                    </select>
+                </div>
+
+                <label id="count_label">合計照射回数:</label>
+                <input type="number" id="count_input" value="1" min="1" oninput="calculate()">
+                
+                <div id="info_msg" class="info" style="display:none;"></div>
+            </div>
+        </div>
+        
+        <div class="col">
+            <div class="box" style="background: #fffdfd; border-color: #ffcdd2;">
+                <label style="color: #555;">💰 会計計算結果 (概算窓口負担額)</label>
+                <div class="result-val" id="total_pay">¥ 0</div>
+                
+                <label>📋 計算内訳明細</label>
+                <pre id="detail_output">ここに内訳が表示されます</pre>
+                
+                <div class="warning">
+                    ⚠️ ※外来の場合、「外来放射線診療料（診察代）」が別途加算されます。<br>
+                    ※治療の進行状況やプラン変更により実際と異なる場合があります。
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// iOS 12でも100%動くレガシーJavaScript構文
+function calculate() {
+    var method = document.getElementById("main_method").value;
+    var ratio = parseInt(document.querySelector('input[name="ratio"]:checked').value);
+    var pt_type = document.querySelector('input[name="pt_type"]:checked').value;
+    
+    // 脳定位SRTは強制入院
+    if (method === "脳定位SRT") {
+        document.getElementById("pt_in").checked = true;
+        document.getElementById("pt_out").disabled = true;
+        pt_type = "入院";
+    } else {
+        document.getElementById("pt_out").disabled = false;
+    }
+
+    // 表示制御のロジック
+    var one_series = ["前立腺VMAT", "全乳房(一連)", "肺定位SBRT", "脳定位SRT", "全身照射TBI", "緩和寡分割"];
+    var outpatient_add = ["前立腺VMAT", "全乳房(一連)", "肺定位SBRT", "脳定位SRT", "緩和寡分割"];
+    var no_igrt = ["1門照射", "対向2門", "非対向2門・3門照射", "ケロイド", "全乳房(一連)", "前立腺VMAT", "肺定位SBRT", "脳定位SRT", "全身照射TBI", "緩和寡分割"];
+    var grid_fix = ["前立腺VMAT", "IMRT", "1門照射", "対向2門", "非対向2門・3門照射", "4門以上・運動・原体照射", "ケロイド"];
+    var breath_list = ["IMRT", "肺定位SBRT", "全乳房(一連)", "非対向2門・3門照射", "4門以上・運動・原体照射"];
+
+    document.getElementById("igrt_div").style.display = (no_igrt.indexOf(method) === -1) ? "block" : "none";
+    document.getElementById("fix_div").style.display = (grid_fix.indexOf(method) !== -1) ? "block" : "none";
+    document.getElementById("breath_div").style.display = (breath_list.indexOf(method) !== -1) ? "block" : "none";
+    document.getElementById("breast_igrt_div").style.display = (method === "全乳房(一連)") ? "block" : "none";
+
+    // インフォ表記と回数ラベル
+    var is_one_series = one_series.indexOf(method) !== -1;
+    var info_msg = document.getElementById("info_msg");
+    if (is_one_series) {
+        info_msg.style.display = "block";
+        info_msg.innerHTML = "💡 " + method + " は一連算定項目です";
+        document.getElementById("count_label").innerText = "外来治療回数 (加算用):";
+        if (pt_type === "入院" || outpatient_add.indexOf(method) === -1) {
+            document.getElementById("count_input").style.display = "none";
+            document.getElementById("count_label").style.display = "none";
+        } else {
+            document.getElementById("count_input").style.display = "block";
+            document.getElementById("count_label").style.display = "block";
+        }
+    } else {
+        info_msg.style.display = "none";
+        document.getElementById("count_label").innerText = "合計照射回数:";
+        document.getElementById("count_input").style.display = "block";
+        document.getElementById("count_label").style.display = "block";
+    }
+
+    var count = parseInt(document.getElementById("count_input").value) || 1;
+    var total_pts = 0;
+    var formula = [];
+
+    // M000 管理料
+    var exclude_m000 = ["肺定位SBRT", "脳定位SRT", "全身照射TBI", "緩和寡分割"];
+    if (exclude_m000.indexOf(method) !== -1) {
+        formula.push("・管理料(M000): 0点 (一連に含む)");
+    } else {
+        var m000_pts = 4000;
+        if (method === "1門照射" || method === "ケロイド" || method === "対向2門") m000_pts = 2700;
+        else if (method === "非対向2門・3門照射") m000_pts = 3100;
+        else if (method === "IMRT" || method === "前立腺VMAT") m000_pts = 5000;
+        
+        total_pts += m000_pts;
+        formula.push("・管理料(M000): " + m000_pts.toLocaleString() + "点");
+        total_pts += 330;
+        formula.push("・放射線治療専任加算: 330点");
+    }
+
+    total_pts += 1100;
+    formula.push("・安全管理料2: 1,100点");
+
+    if (grid_fix.indexOf(method) !== -1 && document.getElementById("fix_sel").value === "作成あり") {
+        total_pts += 1000;
+        formula.push("・体外照射用固定器具加算: 1,000点");
+    }
+
+    // 主計算
+    if (is_one_series) {
+        if (method === "肺定位SBRT") {
+            total_pts += 63000; formula.push("・定位照射(一連): 63,000点");
+            if (document.getElementById("breath_sel").value === "あり") { total_pts += 5000; formula.push("・呼吸性移動対策加算: 5,000点"); }
+        } else if (method === "脳定位SRT") {
+            total_pts += 63000; formula.push("・定位照射(一連): 63,000点");
+        } else if (method === "前立腺VMAT") {
+            total_pts += (96500 + 9000); formula.push("・照射料(一連): 96,500点\n・IGRT(ハ.腫瘍 一連): 9,000点");
+        } else if (method === "全乳房(一連)") {
+            total_pts += 41500; formula.push("・照射料(一連): 41,500点");
+            if (document.getElementById("breast_igrt_sel").value === "あり") { total_pts += 2400; formula.push("・IGRT(一連): 2,400点"); }
+            if (document.getElementById("breath_sel").value === "あり") { total_pts += 2400; formula.push("・呼吸性移動対策加算(一連): 2,400点"); }
+        } else if (method === "全身照射TBI") {
+            total_pts += 30000; formula.push("・全身照射(一連): 30,000点");
+        } else if (method === "緩和寡分割") {
+            total_pts += 8000; formula.push("・緩和寡分割(一連): 8,000点");
+        }
+
+        if (pt_type === "外来" && outpatient_add.indexOf(method) !== -1) {
+            var out_pts = count * 100;
+            total_pts += out_pts;
+            formula.push("・外来放射線治療加算(100点) × " + count + "回: " + out_pts.toLocaleString() + "点");
+        }
+    } else {
+        var base = 0;
+        if (method === "IMRT") base = 3000;
+        else if (method.indexOf("4門以上") !== -1) base = 1750;
+        else if (method === "対向2門" || method === "非対向2門・3門照射") base = 1750;
+        else if (method === "1門照射" || method === "ケロイド") base = 840;
+
+        var igrt_map = {"なし": 0, "イ.体表": 150, "ロ.骨構造": 300, "ハ.腫瘍": 450};
+        var igrt_pts = igrt_map[document.getElementById("igrt_sel").value] || 0;
+
+        var breath_pts = 0;
+        if (document.getElementById("breath_sel").value === "あり") breath_pts = 150;
+
+        var shot_total = (base + igrt_pts + breath_pts) * count;
+        total_pts += shot_total;
+        formula.push("--- 照射ごとの計算 ---");
+        formula.push("・照射料(" + base + "点) × " + count + "回: " + (base*count).toLocaleString() + "点");
+        if (igrt_pts > 0) formula.push("・IGRT(" + igrt_pts + "点) × " + count + "回: " + (igrt_pts*count).toLocaleString() + "点");
+        if (breath_pts > 0) formula.push("・呼吸性移動対策(150点) × " + count + "回: " + (breath_pts*count).toLocaleString() + "点");
+
+        if (pt_type === "外来" && method !== "ケロイド") {
+            var out_pts = count * 100;
+            total_pts += out_pts;
+            formula.push("・外来放射線治療加算(100点) × " + count + "回: " + out_pts.toLocaleString() + "点");
+        }
+    }
+
+    var final_pay = total_pts * 10 * (ratio / 10);
+    
+    // 画面に反映
+    document.getElementById("total_pay").innerText = "¥ " + Math.round(final_pay).toLocaleString();
+    
+    var report = formula.join("\n") + "\n----------------------------\n合計点数: " + total_pts.toLocaleString() + " 点\n計算式: " + total_pts.toLocaleString() + "点 × 10円 × " + (ratio/10) + " = ¥" + Math.round(final_pay).toLocaleString();
+    document.getElementById("detail_output").innerText = report;
+}
+
+// 初期実行
+calculate();
+</script>
+</body>
+</html>
