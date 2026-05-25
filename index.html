@@ -353,7 +353,6 @@ function calculateAll() {
         info_msg.style.display = "block";
         info_msg.innerHTML = "💡 " + method + " は一連算定項目です";
         
-        // 肺定位や脳定位と同じように、加算対象外の一連項目なら回数コンテナだけを非表示にする
         if (pt_type === "外来" && outpatient_add_series.indexOf(method) !== -1) {
             count_label.innerText = "外来治療回数 (加算用):";
             count_container.style.display = "block";
@@ -448,7 +447,8 @@ function calculateAll() {
         if (igrt_pts > 0) formula_list.push("・IGRT(" + igrt_pts + "点) × " + count + "回: " + (igrt_pts*count).toLocaleString() + "点");
         if (breath_per_shot > 0) formula_list.push("・呼吸性移動対策(" + breath_per_shot + "点) × " + count + "回: " + (breath_per_shot*count).toLocaleString() + "点");
 
-        if (pt_type === "外来" && method !== "ケロイド") {
+        // 【修正ポイント1】ケロイドでも外来放射線治療加算を算定
+        if (pt_type === "外来") {
             var out_pts = count * 100; base_pts += out_pts;
             formula_list.push("・外来放射線治療加算(100点) × " + count + "回: " + out_pts.toLocaleString() + "点");
         }
@@ -578,12 +578,13 @@ function calculateAll() {
                 if (ex_breath_pts > 0) {
                     extra_formula.push("・追加呼吸性移動対策(150点) × " + ex_count + "回 = " + (ex_breath_pts*ex_count).toLocaleString() + "点");
                 }
-
-                if (pt_type === "外来" && ex_method !== "ケロイド") {
-                    var ex_out_pts = ex_count * 100; extra_pts += ex_out_pts;
-                    extra_formula.push("・追加外来放射線治療加算(100点) × " + ex_count + "回: " + ex_out_pts.toLocaleString() + "点");
-                }
             }
+        }
+
+        // 【修正ポイント2】シミュレーション側（1回目・2回目追加）でもケロイドなら加算を算定
+        if (pt_type === "外来") {
+            var ex_out_pts = ex_count * 100; extra_pts += ex_out_pts;
+            extra_formula.push("・追加外来放射線治療加算(100点) × " + ex_count + "回: " + ex_out_pts.toLocaleString() + "点");
         }
 
         var extra_pay = extra_pts * 10 * (ratio / 10);
