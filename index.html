@@ -35,8 +35,6 @@
             padding: 15px;
             border-radius: 6px;
             margin-bottom: 15px;
-            position: relative;
-            z-index: 1;
         }
         label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 14px; color: #333; }
         select, input[type="number"] {
@@ -62,7 +60,6 @@
             font-weight: normal; 
             display: inline-block; 
             cursor: pointer;
-            padding: 5px; /* タップ領域の拡大 */
         }
         .radio-inline input {
             vertical-align: middle;
@@ -162,8 +159,10 @@
                     </div>
                 </div>
 
-                <label id="count_label">合計照射回数:</label>
-                <input type="number" id="count_input" value="1" min="1" oninput="calculateAll()">
+                <div id="count_container">
+                    <label id="count_label">合計照射回数:</label>
+                    <input type="number" id="count_input" value="1" min="1" oninput="calculateAll()">
+                </div>
                 
                 <div id="info_msg" class="info" style="display:none;"></div>
             </div>
@@ -348,28 +347,26 @@ function calculateAll() {
     var is_one_series = one_series_methods.indexOf(method) !== -1;
     var info_msg = document.getElementById("info_msg");
     var count_label = document.getElementById("count_label");
-    var count_input = document.getElementById("count_input");
+    var count_container = document.getElementById("count_container");
 
     if (is_one_series) {
         info_msg.style.display = "block";
         info_msg.innerHTML = "💡 " + method + " は一連算定項目です";
         
+        // 肺定位や脳定位と同じように、加算対象外の一連項目なら回数コンテナだけを非表示にする
         if (pt_type === "外来" && outpatient_add_series.indexOf(method) !== -1) {
             count_label.innerText = "外来治療回数 (加算用):";
-            count_input.style.display = "block";
-            count_label.style.display = "block";
+            count_container.style.display = "block";
         } else {
-            count_input.style.display = "none";
-            count_label.style.display = "none";
+            count_container.style.display = "none";
         }
     } else {
         info_msg.style.display = "none";
         count_label.innerText = "合計照射回数:";
-        count_input.style.display = "block";
-        count_label.style.display = "block";
+        count_container.style.display = "block";
     }
 
-    var count = parseInt(count_input.value) || 1;
+    var count = parseInt(document.getElementById("count_input").value) || 1;
     var base_pts = 0;
     var formula_list = [];
 
