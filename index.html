@@ -235,11 +235,11 @@
 </div>
 
 <script>
-// オリジナルのStreamlit定義を完全に再現
 var one_series_methods = ["前立腺VMAT", "全乳房(一連)", "肺定位SBRT", "脳定位SRT", "全身照射TBI", "緩和寡分割"];
-var outpatient_add_series = ["前立腺VMAT", "全乳房(一連)", "肺定位SBRT", "脳定位SRT", "緩和寡分割"];
+// 外来加算を算定する一連リストから「肺定位SBRT」「脳定位SRT」「緩和寡分割」を除外（前立腺VMATと全乳房(一連)のみに）
+var outpatient_add_series = ["前立腺VMAT", "全乳房(一連)"];
 
-// IGRTを算定しない非対象リスト [cite: 10]
+// IGRTを算定しない非対象リスト
 var no_igrt_list = ["1門照射", "対向2門", "非対向2門・3門照射", "ケロイド", "全乳房(一連)", "前立腺VMAT", "肺定位SBRT", "脳定位SRT", "全身照射TBI", "緩和寡分割"];
 var grid_fix_list = ["前立腺VMAT", "IMRT", "1門照射", "対向2門", "非対向2門・3門照射", "4門以上・運動・原体照射", "ケロイド"];
 var breath_list = ["IMRT", "肺定位SBRT", "全乳房(一連)", "非対向2門・3門照射", "4門以上・運動・原体照射"];
@@ -413,6 +413,8 @@ function calculateAll() {
         if (pt_type === "外来" && outpatient_add_series.indexOf(method) !== -1) {
             var out_pts = count * 100; base_pts += out_pts;
             formula_list.push("・外来放射線治療加算(100点) × " + count + "回: " + out_pts.toLocaleString() + "点");
+        } else if (pt_type === "外来" && ["肺定位SBRT", "脳定位SRT", "緩和寡分割"].indexOf(method) !== -1) {
+            formula_list.push("・外来放射線治療加算: 0点 (算定なし除外項目)");
         }
     } else {
         var base_charge = 0;
@@ -543,8 +545,14 @@ function calculateAll() {
                 } else {
                     extra_formula.push("・追加照射(" + ex_method + "): " + ex_base_pts.toLocaleString() + "点");
                 }
+
+                if (pt_type === "外来" && outpatient_add_series.indexOf(ex_method) !== -1) {
+                    var ex_out_pts = ex_count * 100; extra_pts += ex_out_pts;
+                    extra_formula.push("・追加外来放射線治療加算(100点) × " + ex_count + "回: " + ex_out_pts.toLocaleString() + "点");
+                } else if (pt_type === "外来" && ["肺定位SBRT", "脳定位SRT", "緩和寡分割"].indexOf(ex_method) !== -1) {
+                    extra_formula.push("・追加外来放射線治療加算: 0点 (算定なし除外項目)");
+                }
             } else {
-                // IGRT点数の算出部分のスコープバグを修正
                 var ex_igrt_pts = 0;
                 var ex_igrt_sel = "なし";
                 if (!isExNoIgrt) {
@@ -566,11 +574,11 @@ function calculateAll() {
                 if (ex_breath_pts > 0) {
                     extra_formula.push("・追加呼吸性移動対策(150点) × " + ex_count + "回 = " + (ex_breath_pts*ex_count).toLocaleString() + "点");
                 }
-            }
 
-            if (pt_type === "外来" && ex_method !== "ケロイド" && !is_ex_one_series) {
-                var ex_out_pts = ex_count * 100; extra_pts += ex_out_pts;
-                extra_formula.push("・追加外来放射線治療加算(100点) × " + ex_count + "回: " + ex_out_pts.toLocaleString() + "点");
+                if (pt_type === "外来" && ex_method !== "ケロイド") {
+                    var ex_out_pts = ex_count * 100; extra_pts += ex_out_pts;
+                    extra_formula.push("・追加外来放射線治療加算(100点) × " + ex_count + "回: " + ex_out_pts.toLocaleString() + "点");
+                }
             }
         }
 
