@@ -447,7 +447,6 @@ function calculateAll() {
         if (igrt_pts > 0) formula_list.push("・IGRT(" + igrt_pts + "点) × " + count + "回: " + (igrt_pts*count).toLocaleString() + "点");
         if (breath_per_shot > 0) formula_list.push("・呼吸性移動対策(" + breath_per_shot + "点) × " + count + "回: " + (breath_per_shot*count).toLocaleString() + "点");
 
-        // ベース側外来加算判定（ケロイド含む通常照射項目すべてに適用）
         if (pt_type === "外来") {
             var out_pts = count * 100; base_pts += out_pts;
             formula_list.push("・外来放射線治療加算(100点) × " + count + "回: " + out_pts.toLocaleString() + "点");
@@ -581,7 +580,29 @@ function calculateAll() {
             }
         }
 
-        // シミュレーション側の外来加算判定（一連算定以外の全項目に確実に100点加算）
         if (pt_type === "外来" && !is_ex_one_series) {
             var ex_out_normal_pts = ex_count * 100; extra_pts += ex_out_normal_pts;
-            extra_formula
+            extra_formula.push("・追加外来放射線治療加算(100点) × " + ex_count + "回: " + ex_out_normal_pts.toLocaleString() + "点");
+        }
+
+        var extra_pay = extra_pts * 10 * (ratio / 10);
+        document.getElementById("ex_pay_val").innerText = "¥ " + Math.round(extra_pay).toLocaleString();
+        document.getElementById("ex_detail_output").innerText = extra_formula.join("\n") + "\n----------------------------\n追加点数: " + extra_pts.toLocaleString() + " 点\n計算式: " + extra_pts.toLocaleString() + "点 × 10円 × " + (ratio/10) + " = ¥" + Math.round(extra_pay).toLocaleString();
+
+        document.getElementById("grand_result_box").style.display = "block";
+        var grand_total_pts = base_pts + extra_pts;
+        var grand_final_pay = grand_total_pts * 10 * (ratio / 10);
+        
+        if (check_extra_2) {
+            document.getElementById("grand_title").innerText = "#### 🟩 【左側会計 ＋ 2回目会計】総合計 (窓口負担額)";
+            document.getElementById("grand_info_text").innerHTML = "総点数: " + grand_total_pts.toLocaleString() + " 点 <br> (治療ベース: " + base_pts.toLocaleString() + "点 + 2回目追加: " + extra_pts.toLocaleString() + "点)";
+        } else {
+            document.getElementById("grand_title").innerText = "#### 🟩 差額合算後の総合計 (窓口負担額)";
+            document.getElementById("grand_info_text").innerHTML = "総点数: " + grand_total_pts.toLocaleString() + " 点 <br> (治療ベース: " + base_pts.toLocaleString() + "点 + 1回目追加: " + extra_pts.toLocaleString() + "点)";
+        }
+        document.getElementById("grand_pay_val").innerText = "¥ " + Math.round(grand_final_pay).toLocaleString();
+    }
+}
+</script>
+</body>
+</html>
