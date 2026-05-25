@@ -236,10 +236,9 @@
 
 <script>
 var one_series_methods = ["前立腺VMAT", "全乳房(一連)", "肺定位SBRT", "脳定位SRT", "全身照射TBI", "緩和寡分割"];
-// 【修正】前立腺VMATと全乳房(一連)のみ外来放射線治療加算の対象として保持
+// 加算を保持するのは前立腺VMATと全乳房(一連)のみ
 var outpatient_add_series = ["前立腺VMAT", "全乳房(一連)"];
 
-// IGRTを算定しない非対象リスト
 var no_igrt_list = ["1門照射", "対向2門", "非対向2門・3門照射", "ケロイド", "全乳房(一連)", "前立腺VMAT", "肺定位SBRT", "脳定位SRT", "全身照射TBI", "緩和寡分割"];
 var grid_fix_list = ["前立腺VMAT", "IMRT", "1門照射", "対向2門", "非対向2門・3門照射", "4門以上・運動・原体照射", "ケロイド"];
 var breath_list = ["IMRT", "肺定位SBRT", "全乳房(一連)", "非対向2門・3門照射", "4門以上・運動・原体照射"];
@@ -296,13 +295,7 @@ function calculateAll() {
     var ratioRadio = document.querySelector('input[name="ratio"]:checked');
     var ratio = ratioRadio ? parseInt(ratioRadio.value) : 3;
     
-    if (method === "脳定位SRT") {
-        document.getElementById("pt_in").checked = true;
-        document.getElementById("pt_out").disabled = true;
-    } else {
-        document.getElementById("pt_out").disabled = false;
-    }
-    
+    // 【修正】「脳定位SRT」であっても「外来/入院」のロック(disabled)を完全に解除し、自由に選択可能にしました
     var ptTypeRadio = document.querySelector('input[name="pt_type"]:checked');
     var pt_type = ptTypeRadio ? ptTypeRadio.value : "外来";
 
@@ -350,6 +343,7 @@ function calculateAll() {
             count_input.style.display = "block";
             count_label.style.display = "block";
         } else {
+            // 脳定位・肺定位・緩和、または入院の場合は、加算対象外のため回数入力を非表示に
             count_input.style.display = "none";
             count_label.style.display = "none";
         }
@@ -412,7 +406,7 @@ function calculateAll() {
             base_pts += 8000; formula_list.push("・緩和寡分割(一連): 8,000点");
         }
 
-        // 【修正】前立腺VMAT、全乳房(一連) のみ外来加算を加算する
+        // 前立腺VMAT、全乳房(一連) のみ外来加算を加算する
         if (pt_type === "外来" && outpatient_add_series.indexOf(method) !== -1) {
             var out_pts = count * 100; base_pts += out_pts;
             formula_list.push("・外来放射線治療加算(100点) × " + count + "回: " + out_pts.toLocaleString() + "点");
@@ -471,7 +465,7 @@ function calculateAll() {
         var is_ex_one_series = one_series_methods.indexOf(ex_method) !== -1;
         var ex_count = 1;
         
-        // 【修正】追加分1回目のとき、外来加算のある前立腺・乳房のみ回数入力を出す。除外一連項目は非表示
+        // 追加分1回目のとき、外来加算のある前立腺・乳房のみ回数入力を出す。除外一連項目は非表示
         if (!check_extra_2 && is_ex_one_series && outpatient_add_series.indexOf(ex_method) === -1) {
             document.getElementById("ex_count_container").style.display = "none";
         } else {
@@ -549,7 +543,7 @@ function calculateAll() {
                     extra_formula.push("・追加照射(" + ex_method + "): " + ex_base_pts.toLocaleString() + "点");
                 }
 
-                // 【修正】追加エリア1回目でも前立腺VMAT、全乳房(一連) のみ外来加算をプラスする
+                // 追加エリア1回目でも前立腺VMAT、全乳房(一連) のみ外来加算をプラスする
                 if (pt_type === "外来" && outpatient_add_series.indexOf(ex_method) !== -1) {
                     var ex_out_pts = ex_count * 100; extra_pts += ex_out_pts;
                     extra_formula.push("・追加外来放射線治療加算(100点) × " + ex_count + "回: " + ex_out_pts.toLocaleString() + "点");
